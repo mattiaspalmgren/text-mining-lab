@@ -1,4 +1,5 @@
 from urllib import request
+from bs4 import BeautifulSoup
 import re
 
 
@@ -17,7 +18,11 @@ def get_description(url):
     # Open URL
     raw = request.urlopen(url).read().decode('utf8')
     description = re.findall("itemprop=\"description.*?\">.*?<div jsname=\".*?\">.*?</div>", raw)
-    return description
+
+    # Remove html syntax
+    soup = BeautifulSoup(description[0], 'html.parser')
+    text = soup.div.get_text()
+    return text
 
 
 

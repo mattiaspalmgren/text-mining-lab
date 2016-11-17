@@ -1,5 +1,9 @@
+from nltk.corpus import stopwords
+from nltk.stem.lancaster import LancasterStemmer
 from crawler import crawl_for_links, get_description
 import nltk, re
+nltk.download("punkt")
+nltk.download("stopwords")
 
 # ----- Access web site such as Google Play and extract at least 1000 app descriptions
 
@@ -38,10 +42,20 @@ for url in urls:
 
 print(len(set(links)))
 
-# desc = get_description(list(links)[0])
-# print(desc)
+description = get_description(list(links)[0])
 
-# ----- Pre-process app descriptions: tokenization, normalization, etc
+# ---- Pre-process app descriptions: tokenization, normalization, etc
+
+# Tokenize
+tokens = nltk.word_tokenize(description)
+
+# Remove non alpha-numeric characters and lowercase words
+tokens = [re.sub(r'\W+', '', token).lower() for token in tokens]
+
+# Remove stopwords and stem tokens
+st = LancasterStemmer()
+stop = set(stopwords.words('english'))
+tokens = set([st.stem(token) for token in tokens if token not in stop])
 
 # Compute and store tf, df in the inverted index
 
