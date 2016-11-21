@@ -37,12 +37,13 @@ urls = ["/top",
         ]
 
 links = []
-for url in urls:
+for url in urls[0:1]:
     links = links + crawl_for_links(url)
 
 print(len(set(links)))
 
 description = get_description(list(links)[0])
+
 
 # ---- Pre-process app descriptions: tokenization, normalization, etc
 
@@ -57,6 +58,7 @@ st = LancasterStemmer()
 stop = set(stopwords.words('english'))
 tokens = set([st.stem(token) for token in tokens if token not in stop])
 
+print(tokens)
 # Compute and store tf, df in the inverted index
 
 # Write a ranked query processor using vector space model
