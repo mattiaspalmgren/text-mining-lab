@@ -43,6 +43,7 @@ for url in urls[0:1]:
 links = set(links)
 descriptions = [get_description(link) for link in list(links)[0:3]]
 
+
 # ---- Pre-process app descriptions: tokenization, normalization, etc
 
 tokens = [[]]
