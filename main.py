@@ -1,6 +1,7 @@
 from crawler import *
 from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
+from math import log
 import re, nltk
 nltk.download("punkt")
 nltk.download("stopwords")
@@ -66,9 +67,9 @@ for description in descriptions:
         tokens.append(temp_tokens)
 
 # Compute and store idf
-unique_tokens = [set(document) for document in tokens]
-all_tokens = [token for document in unique_tokens for token in document]
-idf = [[token, all_tokens.count(token)] for token in all_tokens]
+documents = [set(document) for document in tokens]
+all_tokens = [token for document in documents for token in document]
+idf = [[token, log(len(documents) / all_tokens.count(token))] for token in all_tokens]
 
 # Write a ranked query processor using vector space model
 
