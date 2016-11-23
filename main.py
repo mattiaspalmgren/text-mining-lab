@@ -1,8 +1,11 @@
 from crawler import *
 from tf_idf import *
+from ranked_query_processor import *
+
 from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
 import re, nltk
+import numpy
 
 nltk.download("punkt")
 nltk.download("stopwords")
@@ -80,3 +83,5 @@ tf_idf_matrix = build_document_matrix(document_tokens, tf_matrix, vocabulary)
 
 # ---- Write a ranked query processor using vector space model
 
+sim = cosine_similarity([1, 0, 0], [0, 1, 0])
+print(sim)
