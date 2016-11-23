@@ -1,9 +1,8 @@
 from crawler import *
+from tf_idf import *
 from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
-from math import log
 import re, nltk
-import numpy
 
 nltk.download("punkt")
 nltk.download("stopwords")
@@ -68,41 +67,16 @@ for description in descriptions:
 
         document_tokens.append(temp_tokens)
 
+# ---- Compute and store tf, idf
 
-vocabulary = set()
-for document in document_tokens:
-        vocabulary.update([token for token in document])
+vocabulary = build_vocabulary(document_tokens)
 
+# Compute tf for all documents
+tf_matrix = build_tf_matrix(vocabulary, document_tokens)
 
-def freq(term, document):
-        return document.count(term)
-
-document_term_matrix = []
-for document in document_tokens:
-        freq_vector = [freq(word, document) for word in vocabulary]
-        tf_vector = [freq / max(freq_vector) for freq in freq_vector]
-        document_term_matrix.append(tf_vector)
+# Compute idf and multiply with tf vectors for all documents
+tf_idf_matrix = build_document_matrix(document_tokens, tf_matrix, vocabulary)
 
 
-def numDocsContaining(word, doclist):
-    doccount = 0
-    for doc in doclist:
-        if freq(word, doc) > 0:
-            doccount += 1
-    return doccount
-
-
-def idf(word, doclist):
-    n_documents = len(doclist)
-    df = numDocsContaining(word, doclist)
-    return log(n_documents / df)
-
-idf_vector = [idf(word, document_tokens) for word in vocabulary]
-
-document_matrix = []
-for i in range(0, len(document_term_matrix)):
-        document_matrix.append(numpy.multiply(document_term_matrix[i], idf_vector))
-
-print(document_matrix)
-# Write a ranked query processor using vector space model
+# ---- Write a ranked query processor using vector space model
 
