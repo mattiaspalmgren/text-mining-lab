@@ -3,6 +3,8 @@ from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
 from math import log
 import re, nltk
+import numpy
+
 nltk.download("punkt")
 nltk.download("stopwords")
 
@@ -47,11 +49,14 @@ descriptions = [get_description(link) for link in list(links)[0:3]]
 
 # ---- Pre-process app descriptions: tokenization, normalization, etc
 
-tokens = [[]]
+document_tokens = []
 tf = []
 st = LancasterStemmer()
 stop = stopwords.words('english')
+stop.append('')
+
 for description in descriptions:
+
         # Tokenize
         temp_tokens = (nltk.word_tokenize(description))
 
@@ -61,15 +66,43 @@ for description in descriptions:
         # Remove stopwords and stem tokens
         temp_tokens = [st.stem(str(token)) for token in temp_tokens if token not in stop]
 
-        # Compute and store tf
-        tf.append([[token, temp_tokens.count(token)] for token in set(temp_tokens)])
+        document_tokens.append(temp_tokens)
 
-        tokens.append(temp_tokens)
 
-# Compute and store idf
-documents = [set(document) for document in tokens]
-all_tokens = [token for document in documents for token in document]
-idf = [[token, log(len(documents) / all_tokens.count(token))] for token in all_tokens]
+vocabulary = set()
+for document in document_tokens:
+        vocabulary.update([token for token in document])
 
+
+def freq(term, document):
+        return document.count(term)
+
+document_term_matrix = []
+for document in document_tokens:
+        freq_vector = [freq(word, document) for word in vocabulary]
+        tf_vector = [freq / max(freq_vector) for freq in freq_vector]
+        document_term_matrix.append(tf_vector)
+
+
+def numDocsContaining(word, doclist):
+    doccount = 0
+    for doc in doclist:
+        if freq(word, doc) > 0:
+            doccount += 1
+    return doccount
+
+
+def idf(word, doclist):
+    n_documents = len(doclist)
+    df = numDocsContaining(word, doclist)
+    return log(n_documents / df)
+
+idf_vector = [idf(word, document_tokens) for word in vocabulary]
+
+document_matrix = []
+for i in range(0, len(document_term_matrix)):
+        document_matrix.append(numpy.multiply(document_term_matrix[i], idf_vector))
+
+print(document_matrix)
 # Write a ranked query processor using vector space model
 
