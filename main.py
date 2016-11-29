@@ -1,6 +1,7 @@
 from crawler import *
 from tf_idf import *
 from ranked_query_processor import *
+from preprocess import *
 
 from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
@@ -46,7 +47,7 @@ for url in urls[0:1]:
     links = links + crawl_for_links(url)
 
 links = set(links)
-descriptions = [get_description(link) for link in list(links)[0:3]]
+descriptions = [get_description(link) for link in list(links)[0:10]]
 
 
 # ---- Pre-process app descriptions: tokenization, normalization, etc
@@ -58,17 +59,10 @@ stop = stopwords.words('english')
 stop.append('')
 
 for description in descriptions:
-
-        # Tokenize
-        temp_tokens = (nltk.word_tokenize(description))
-
-        # Remove non alpha-numeric characters and lowercase words
-        temp_tokens = [re.sub(r'\W+', '', str(token)).lower() for token in temp_tokens]
-
-        # Remove stopwords and stem tokens
-        temp_tokens = [st.stem(str(token)) for token in temp_tokens if token not in stop]
+        temp_tokens = preprocess(description)
 
         document_tokens.append(temp_tokens)
+
 
 # ---- Compute and store tf, idf
 
@@ -80,8 +74,16 @@ tf_matrix = build_tf_matrix(vocabulary, document_tokens)
 # Compute idf and multiply with tf vectors for all documents
 tf_idf_matrix = build_document_matrix(document_tokens, tf_matrix, vocabulary)
 
+# Build inverted index with a map containing [word, [indexes of documents where word occur]]
+index = {}
+for word in vocabulary:
+        index[word] = []
+        for document in document_tokens:
+                if word in document:
+                        index[word].append(document_tokens.index(document))
+
+
 
 # ---- Write a ranked query processor using vector space model
 
 sim = cosine_similarity([1, 0, 0], [0, 1, 0])
-print(sim)
