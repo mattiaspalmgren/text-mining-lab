@@ -13,7 +13,7 @@ nltk.download("stopwords")
 
 # ----- Access web site such as Google Play and extract at least 1000 app descriptions
 
-# Start points
+# Start points for the crawling
 urls = ["/top",
         "/category/BUSINESS",
         "/category/EDUCATION",
@@ -109,6 +109,6 @@ for doc_idx in answer_set:
 res = list(zip(list(answer_set), sim))
 
 # Sorted result tuples, with (idx, ranking)
-res = sorted(res, key=lambda tup: tup[1])
+res = sorted(res, key=lambda tup: -tup[1])
 
 print(res)
