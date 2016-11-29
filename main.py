@@ -5,7 +5,7 @@ from preprocess import *
 
 from nltk.corpus import stopwords
 from nltk.stem.lancaster import LancasterStemmer
-import re, nltk
+import nltk, sys
 import numpy
 
 nltk.download("punkt")
@@ -87,7 +87,7 @@ for word in vocabulary:
 # ---- Write a ranked query processor using vector space model
 
 
-query = "strategy game war"
+query = sys.argv[1]
 query = preprocess(query)
 
 query_freq_vector = [(query.count(word)*0.5+0.5) for word in vocabulary]
@@ -110,3 +110,5 @@ res = list(zip(list(answer_set), sim))
 
 # Sorted result tuples, with (idx, ranking)
 res = sorted(res, key=lambda tup: tup[1])
+
+print(res)
