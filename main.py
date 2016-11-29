@@ -86,4 +86,27 @@ for word in vocabulary:
 
 # ---- Write a ranked query processor using vector space model
 
-sim = cosine_similarity([1, 0, 0], [0, 1, 0])
+
+query = "strategy game war"
+query = preprocess(query)
+
+query_freq_vector = [(query.count(word)*0.5+0.5) for word in vocabulary]
+query_idf_vector = [idf(word, document_tokens) for word in vocabulary]
+query_tf_idf = numpy.multiply(query_freq_vector, query_idf_vector)
+
+answer_set = []
+for word in query:
+    if word in vocabulary:
+        answer_set.append(index[word])
+
+answer_set = set([doc_index for doc_list in answer_set for doc_index in doc_list])
+
+sim = []
+for doc_idx in answer_set:
+    sim.append(cosine_similarity(query_tf_idf, tf_idf_matrix[doc_idx]))
+
+
+res = list(zip(list(answer_set), sim))
+
+# Sorted result tuples, with (idx, ranking)
+res = sorted(res, key=lambda tup: tup[1])
