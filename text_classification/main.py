@@ -12,6 +12,7 @@ documents = [(list(movie_reviews.words(fileid)), category)
              for category in movie_reviews.categories()
              for fileid in movie_reviews.fileids(category)]
 
+random.seed(12345)
 random.shuffle(documents)
 
 
@@ -37,21 +38,38 @@ for (document, classification) in documents:
 documents = processed_documents
 words = vocalbulary
 
+# print(list(nltk.trigrams(vocalbulary)))
+
 all_words = nltk.FreqDist(w for w in words)
 word_features = list(all_words.most_common())[:1000]
 
-print(word_features)
 
-
-def document_feature(document):
+def document_feature_contains(document):
     document_word = set(document)
     features = {}
-    for (word, freq) in word_features:
-        features['contains({})'.format(word)] = (word in document_word)
+    for (w, freq) in word_features:
+        features['contains({})'.format(w)] = (w in document_word)
+    return features
+
+
+def document_feature_additional(document):
+    document_word = set(document)
+    features = {}
+    for (w, freq) in word_features:
+        features['freq0({})'.format(w)] = document.count(w) == 0
+        features['freq1({})'.format(w)] = document.count(w) == 1
+        features['freq2({})'.format(w)] = document.count(w) == 2
+        features['freq3({})'.format(w)] = document.count(w) > 3
+
+    lexical_diversity = len(set(document)) / len(word_features)
+    features['document_diversity_small'] = lexical_diversity < 0.2
+    features['document_diversity_medium'] = 0.2 <= lexical_diversity < 0.4
+    features['document_diversity_large'] = 0.4 <= lexical_diversity
+
     return features
 
 N = len(documents)
-feature_sets = [(document_feature(d), c) for (d, c) in documents]
+feature_sets = [(document_feature_additional(d), c) for (d, c) in documents]
 # print(feature_sets)
 
 train_set, test_set = feature_sets[math.floor(N*0.8):], feature_sets[:math.floor(N*0.8)]
