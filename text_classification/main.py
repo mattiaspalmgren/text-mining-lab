@@ -1,8 +1,10 @@
 from nltk.corpus import movie_reviews, stopwords
 from nltk.stem.lancaster import LancasterStemmer
 from nltk.stem.porter import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy import sparse
 import nltk.probability, nltk.metrics
-import random, math, re
+import random, math, re, numpy
 
 nltk.download("movie_reviews")
 
@@ -10,7 +12,7 @@ nltk.download("movie_reviews")
 # Build data structure for the movie reviews
 documents = [(list(movie_reviews.words(fileid)), category)
              for category in movie_reviews.categories()
-             for fileid in movie_reviews.fileids(category)]
+             for fileid in movie_reviews.fileids(category)[:100]]
 
 random.seed(12345)
 random.shuffle(documents)
@@ -35,10 +37,8 @@ for (document, classification) in documents:
     processed_documents.append((tmp_document, classification))
 
 
-documents = processed_documents
+# documents = processed_documents
 words = vocalbulary
-
-# print(list(nltk.trigrams(vocalbulary)))
 
 all_words = nltk.FreqDist(w for w in words)
 word_features = list(all_words.most_common())[:1000]
@@ -55,22 +55,44 @@ def document_feature_contains(document):
 def document_feature_additional(document):
     document_word = set(document)
     features = {}
+    sum_len = 0
+    sum_n = 0
     for (w, freq) in word_features:
         features['freq0({})'.format(w)] = document.count(w) == 0
         features['freq1({})'.format(w)] = document.count(w) == 1
         features['freq2({})'.format(w)] = document.count(w) == 2
         features['freq3({})'.format(w)] = document.count(w) > 3
+        if w in document:
+            sum_len += len(w)
+            sum_n += 1
 
-    lexical_diversity = len(set(document)) / len(word_features)
+    lexical_diversity = len(set(document_word)) / len(word_features)
     features['document_diversity_small'] = lexical_diversity < 0.2
     features['document_diversity_medium'] = 0.2 <= lexical_diversity < 0.4
     features['document_diversity_large'] = 0.4 <= lexical_diversity
+    average_word_length = sum_len/sum_n
+    features['average_word_length_short'] = average_word_length < 4.3
+    features['average_word_length_long'] = average_word_length >= 4.3
 
     return features
 
+
+
+
 N = len(documents)
-feature_sets = [(document_feature_additional(d), c) for (d, c) in documents]
-# print(feature_sets)
+feature_sets = [(document_feature_contains(d), c) for (d, c) in documents]
+#print(feature_sets)
+
+document_list = [' '.join(d) for (d, c) in documents]
+tfidf_vectorizer = TfidfVectorizer(min_df = 1)
+tfidf_matrix = tfidf_vectorizer.fit_transform(document_list)
+
+
+
+print(len(tfidf_vectorizer.idf_))
+#print(len(tfidf_matrix.toarray()[1]))
+#print(len(tfidf_matrix.todense()))
+
 
 train_set, test_set = feature_sets[math.floor(N*0.8):], feature_sets[:math.floor(N*0.8)]
 
@@ -83,7 +105,7 @@ predictions = classifier.classify_many(test_set_without_lables)
 accuracy = nltk.classify.accuracy(classifier, test_set)
 
 confusion_matrix = nltk.ConfusionMatrix(test_labels, predictions)
-print(confusion_matrix)
+#print(confusion_matrix)
 
 tp = confusion_matrix["pos", "pos"]
 fn = confusion_matrix["pos", "neg"]
@@ -93,7 +115,7 @@ fp = confusion_matrix["neg", "pos"]
 precision = tp if (tp + fp == 0) else tp / (tp + fp)
 recall = tp if (tp + fn == 0) else tp / (tp + fn)
 f_score = 2 * (precision * recall)/(precision + recall)
-print(accuracy, precision, recall, f_score)
+#print(accuracy, precision, recall, f_score)
 
 
 
